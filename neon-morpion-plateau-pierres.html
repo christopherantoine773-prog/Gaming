@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b18">
+<meta name="description" content="NEON MORPION — un duel de formes lumineuses à deux joueurs.">
+<title>NEON MORPION — Duel des formes</title>
+<style>
+:root{--bg:#070b18;--panel:rgba(17,25,48,.82);--line:rgba(145,170,255,.18);--text:#f4f7ff;--muted:#9ca8c7;--blue:#36d9ff;--pink:#ff4fd8;--gold:#ffe58a}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(ellipse at 15% 0%,rgba(54,217,255,.14),transparent 38%),radial-gradient(ellipse at 90% 25%,rgba(255,79,216,.12),transparent 35%),linear-gradient(145deg,#050711,#0a1024 58%,#080a16);overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.22;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:32px 32px;mask-image:linear-gradient(to bottom,black,transparent 90%)}
+.wrap{width:min(100% - 28px,920px);margin:auto;padding:26px 0 30px;position:relative}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),#8274ff 55%,var(--pink));box-shadow:0 0 28px #36d9ff35;font-size:23px;color:#07101d;font-weight:900}
+.brand h1{font-size:clamp(17px,4vw,24px);letter-spacing:.12em;margin:0;font-weight:900}.brand p{font-size:11px;color:var(--muted);letter-spacing:.2em;margin:4px 0 0}
+.pill{border:1px solid var(--line);background:#ffffff08;border-radius:999px;padding:9px 12px;color:#cbd5f5;font-size:11px;letter-spacing:.13em;white-space:nowrap}
+.hero{text-align:center;margin:8px auto 24px}.eyebrow{font-size:11px;letter-spacing:.32em;color:var(--blue);font-weight:800}
+.hero h2{font-size:clamp(27px,7vw,48px);line-height:1.08;margin:12px 0 10px;letter-spacing:-.045em}.hero h2 span{background:linear-gradient(90deg,var(--blue),#b7c5ff,var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;margin:0 auto 18px;max-width:640px}
+.player{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(12px);border-radius:17px;padding:14px 15px;display:flex;align-items:center;gap:11px;min-width:0;transition:.25s}
+.player.active{border-color:var(--player);box-shadow:0 0 0 1px color-mix(in srgb,var(--player) 20%,transparent),0 0 26px color-mix(in srgb,var(--player) 13%,transparent)}
+.player.blue{--player:var(--blue)}.player.pink{--player:var(--pink);flex-direction:row-reverse;text-align:right}
+.token{width:39px;height:39px;display:grid;place-items:center;flex:none;border-radius:12px;background:color-mix(in srgb,var(--player) 12%,transparent);color:var(--player);font-size:26px;text-shadow:0 0 16px var(--player)}
+.player strong{display:block;font-size:13px;letter-spacing:.07em}.player small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.vs{align-self:center;color:#65708f;font-size:10px;font-weight:900;letter-spacing:.15em}
+.game-layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:18px;max-width:760px;margin:auto;align-items:start}
+.board-shell{padding:12px;border:1px solid var(--line);border-radius:25px;background:linear-gradient(145deg,#ffffff0b,#ffffff03);box-shadow:0 24px 70px #0006,inset 0 1px #ffffff08;position:relative}
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:0;aspect-ratio:1;background:rgba(7,11,24,.9);border:0;border-radius:15px;overflow:hidden;position:relative;isolation:isolate}.board-lines{position:absolute;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;overflow:visible}
+.cell{border:0;border-radius:0;background:transparent;display:grid;place-items:center;cursor:pointer;min-width:0;min-height:0;position:relative;overflow:visible;transition:background .18s;-webkit-tap-highlight-color:transparent;z-index:1}
+.cell:before{content:"";position:absolute;inset:12%;border-radius:50%;background:radial-gradient(circle at 50% 25%,#ffffff18,transparent 70%);opacity:0;transition:opacity .2s}
+.cell:hover:not(:disabled){background:linear-gradient(145deg,rgba(35,53,91,.98),rgba(12,22,45,.98))}.cell:hover:not(:disabled):before{opacity:1}.cell:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.cell:disabled{cursor:default}
+.symbol{width:62%;height:62%;display:grid;place-items:center;animation:pop .28s cubic-bezier(.2,.8,.2,1)}.symbol svg{width:100%;height:100%;overflow:visible}
+.cell.blue-mark{background:radial-gradient(circle,#36d9ff18,transparent 72%)}
+.cell.pink-mark{background:radial-gradient(circle,#ff4fd818,transparent 72%)}
+.cell.selected-piece{outline:3px solid var(--gold);outline-offset:-5px;filter:brightness(1.35)}.cell.winner{box-shadow:inset 0 0 25px #ffe58a0b;animation:winpulse 1s ease-in-out infinite alternate}.cell.winner .symbol{filter:drop-shadow(0 0 13px var(--gold))}
+@keyframes pop{from{transform:scale(.25) rotate(-18deg);opacity:.3}to{transform:scale(1) rotate(0);opacity:1}}@keyframes winpulse{from{background-color:#ffe58a08}to{background-color:#ffe58a17}}
+.side{display:flex;flex-direction:column;gap:12px}.status-card,.info-card{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:17px;backdrop-filter:blur(12px)}
+.label{font-size:10px;letter-spacing:.2em;color:var(--muted);font-weight:800}.status{font-size:18px;font-weight:800;line-height:1.3;margin:10px 0 7px}.status-sub{font-size:12px;line-height:1.55;color:var(--muted);min-height:36px}
+.turn-indicator{height:4px;background:#ffffff0c;border-radius:10px;overflow:hidden;margin-top:16px}.turn-fill{height:100%;width:25%;background:linear-gradient(90deg,var(--blue),var(--pink));border-radius:10px;transition:width .25s}
+.buttons{display:grid;gap:9px}button.action{font:inherit;border:1px solid var(--line);border-radius:13px;padding:12px 14px;background:#ffffff08;color:var(--text);font-weight:750;font-size:13px;cursor:pointer;transition:.2s}
+button.action:hover{background:#ffffff12;transform:translateY(-1px)}button.primary{border:0;color:#06101d;background:linear-gradient(100deg,var(--blue),#9beaff);box-shadow:0 8px 25px #36d9ff24}button.primary:hover{filter:brightness(1.08)}
+.shape-legend{display:grid;gap:13px;margin-top:13px}.legend-item{display:flex;align-items:center;gap:10px;font-size:12px;color:#dce4ff}.legend-shape{width:30px;height:30px;border-radius:9px;background:#ffffff08;display:grid;place-items:center;font-size:20px}.legend-shape.blue{color:var(--blue)}.legend-shape.pink{color:var(--pink)}
+.mode-card{display:flex;flex-direction:column;gap:10px}.online-options{display:grid;gap:8px;font-size:12px;color:var(--muted)}.field{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#0b1226;color:var(--text);font:inherit}[hidden]{display:none!important}.tip{font-size:11px;line-height:1.65;color:var(--muted);margin:13px 0 0}.footer{text-align:center;color:#65708f;font-size:10px;letter-spacing:.13em;margin-top:24px}
+.win-banner{display:none;margin:0 auto 15px;max-width:760px;text-align:center;border:1px solid #ffe58a4d;background:#ffe58a0b;border-radius:14px;padding:12px;color:var(--gold);font-weight:800;letter-spacing:.07em}.win-banner.show{display:block;animation:pop .35s ease}
+@media(max-width:680px){.wrap{width:min(100% - 20px,540px);padding-top:19px}.top{margin-bottom:20px}.pill{font-size:9px;padding:8px}.game-layout{grid-template-columns:1fr;gap:12px}.side{display:grid;grid-template-columns:1fr 1fr;gap:10px}.status-card,.info-card{grid-column:1/-1}.board-shell{padding:9px;border-radius:21px}.board{gap:0}.cell{border-radius:0}.scoreboard{gap:7px}.player{padding:10px;gap:8px}.player strong{font-size:11px}.player small{font-size:10px}.token{width:32px;height:32px;font-size:22px}.vs{font-size:9px}.hero{margin-bottom:19px}.status-card,.info-card{padding:14px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="brand"><div class="logo">✦</div><div><h1>NEON MORPION</h1><p>LE DUEL DES FORMES</p></div></div><div class="pill" id="connection-pill">MODE LOCAL</div></header>
+<section class="hero"><div class="eyebrow">STRATÉGIE • PRÉCISION • VICTOIRE</div><h2>Trois formes.<br><span>Une seule ligne.</span></h2><p>Chaque joueur possède 3 pièces : place-les, puis déplace-les vers une case libre pour aligner les trois.</p></section>
+<section class="scoreboard" aria-label="Joueurs">
+<div class="player blue active" id="player-blue"><div class="token" aria-hidden="true">○</div><div><strong>JOUEUR AZUR</strong><small>Ronds · <span id="score-blue">0</span> victoire(s)</small></div></div><div class="vs">VS</div>
+<div class="player pink" id="player-pink"><div class="token" aria-hidden="true">✦</div><div><strong>JOUEUR ORCHIDÉE</strong><small>Étoiles · <span id="score-pink">0</span> victoire(s)</small></div></div>
+</section>
+<div class="win-banner" id="win-banner" role="status" aria-live="polite"></div>
+<main class="game-layout"><section class="board-shell" aria-label="Plateau de morpion"><div class="board" id="board"><svg class="board-lines" viewBox="0 0 300 300" aria-hidden="true"><g fill="none" stroke="rgba(145,170,255,.7)" stroke-width="3.5" stroke-linecap="round"><path d="M50 50 H250 V250 H50 Z M150 50 V250 M50 150 H250 M50 50 L150 150 L250 250 M250 50 L150 150 L50 250"/></g><g fill="rgba(54,217,255,.13)" stroke="rgba(145,170,255,.7)" stroke-width="2"><circle cx="50" cy="50" r="8"/><circle cx="150" cy="50" r="8"/><circle cx="250" cy="50" r="8"/><circle cx="50" cy="150" r="8"/><circle cx="150" cy="150" r="8"/><circle cx="250" cy="150" r="8"/><circle cx="50" cy="250" r="8"/><circle cx="150" cy="250" r="8"/><circle cx="250" cy="250" r="8"/></g></svg>
+<button class="cell" data-index="0" aria-label="Case 1, libre"></button><button class="cell" data-index="1" aria-label="Case 2, libre"></button><button class="cell" data-index="2" aria-label="Case 3, libre"></button>
+<button class="cell" data-index="3" aria-label="Case 4, libre"></button><button class="cell" data-index="4" aria-label="Case 5, libre"></button><button class="cell" data-index="5" aria-label="Case 6, libre"></button>
+<button class="cell" data-index="6" aria-label="Case 7, libre"></button><button class="cell" data-index="7" aria-label="Case 8, libre"></button><button class="cell" data-index="8" aria-label="Case 9, libre"></button>
+</div></section>
+<aside class="side"><section class="status-card"><div class="label">ÉTAT DE LA PARTIE</div><div class="status" id="status">Au tour du Joueur X</div><div class="status-sub" id="status-sub">Place 3 pièces, puis déplace-les le long des lignes du plateau.</div><div class="turn-indicator"><div class="turn-fill" id="turn-fill"></div></div></section>
+<section class="info-card"><div class="label">LES DEUX FORMES</div><div class="shape-legend"><div class="legend-item"><span class="legend-shape blue">○</span><span><b>Rond azur</b><br>Joueur 1</span></div><div class="legend-item"><span class="legend-shape pink">✦</span><span><b>Étoile orchidée</b><br>Joueur 2</span></div></div><p class="tip">Chaque joueur a 3 pièces. Après les avoir placées, déplace-les uniquement vers un point voisin relié par une ligne. Aligne les 3 pour gagner.</p></section>
+<section class="info-card mode-card"><div class="label">MODE DE JEU</div>
+<div class="buttons"><button class="action primary" id="mode-bot">🤖 Jouer contre le bot</button><button class="action" id="mode-local">👥 2 joueurs sur cet appareil</button><button class="action" id="mode-online">🌍 Jouer en ligne</button></div>
+<div id="bot-options" class="online-options"><label for="difficulty">Difficulté du bot</label><select id="difficulty" class="field"><option value="easy">Facile</option><option value="medium" selected>Moyen</option><option value="hard">Difficile</option></select></div>
+<div id="online-options" class="online-options" hidden><p class="tip">Crée une salle et partage ton identifiant avec ton ami, ou rejoins sa salle. Internet est nécessaire.</p><button class="action" id="host-online">Créer une salle</button><label for="peer-id">Identifiant de ton ami</label><input id="peer-id" class="field" placeholder="Colle l'identifiant ici"><button class="action" id="join-online">Rejoindre la salle</button><div id="online-status" class="tip">Pas encore connecté.</div></div></section>
+<div class="buttons"><button class="action primary" id="restart">↻ Nouvelle partie</button><button class="action" id="reset-scores">Réinitialiser les scores</button></div></aside></main>
+<footer class="footer">NEON MORPION · FAIT POUR LES DUELS ENTRE AMIS</footer>
+</div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(()=>{'use strict';
+const cells=[...document.querySelectorAll('.cell')],status=document.getElementById('status'),statusSub=document.getElementById('status-sub'),banner=document.getElementById('win-banner'),turnFill=document.getElementById('turn-fill');
+const players={blue:document.getElementById('player-blue'),pink:document.getElementById('player-pink')},scoreEls={blue:document.getElementById('score-blue'),pink:document.getElementById('score-pink')};
+const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];const links=[[1,3,4],[0,2,4],[1,5,4],[0,4,6],[0,1,2,3,5,6,7,8],[2,4,8],[3,4,7],[4,6,8],[4,5,7]];function canMove(from,to){return links[from].includes(to);}
+const symbols={blue:'<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="29" fill="none" stroke="currentColor" stroke-width="9"/></svg>',pink:'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 7 L61 35 L91 36 L68 55 L76 85 L50 68 L24 85 L32 55 L9 36 L39 35 Z" fill="currentColor" stroke="currentColor" stroke-linejoin="round" stroke-width="2"/></svg>'};
+let board,current,gameOver,scores;let selectedPiece=null;let mode='local',difficulty='medium',peer=null,connection=null,mySide='blue',botTimer=null;try{scores=JSON.parse(localStorage.getItem('neonMorpionScores'))||{blue:0,pink:0};if(typeof scores.blue!=='number'||typeof scores.pink!=='number')throw Error();}catch{scores={blue:0,pink:0};}
+function updateScores(){scoreEls.blue.textContent=scores.blue;scoreEls.pink.textContent=scores.pink;try{localStorage.setItem('neonMorpionScores',JSON.stringify(scores));}catch{}}
+function setTurn(){players.blue.classList.toggle('active',current==='blue'&&!gameOver);players.pink.classList.toggle('active',current==='pink'&&!gameOver);turnFill.style.width=current==='blue'?'25%':'75%';turnFill.style.background=current==='blue'?'linear-gradient(90deg,#36d9ff,#8beaff)':'linear-gradient(90deg,#b849ff,#ff4fd8)';}
+function newGame(notify=true){clearTimeout(botTimer);board=Array(9).fill(null);current='blue';gameOver=false;selectedPiece=null;banner.classList.remove('show');banner.textContent='';cells.forEach((cell,i)=>{cell.className='cell';cell.innerHTML='';cell.disabled=false;cell.setAttribute('aria-label',`Case ${i+1}, libre`);});status.textContent='Au tour du Joueur X';statusSub.textContent=mode==='bot'?'Tu joues avec X. Le bot joue avec O.':'Place 3 pièces, puis déplace-les le long des lignes du plateau.';setTurn();if(notify&&mode==='online'&&connection&&connection.open)connection.send({type:'restart'});if(mode==='bot')updateBotTurn();}
+function finish(winner,line){gameOver=true;cells.forEach(cell=>cell.disabled=true);if(winner){line.forEach(i=>cells[i].classList.add('winner'));scores[winner]++;updateScores();const name=winner==='blue'?'JOUEUR AZUR':'JOUEUR ORCHIDÉE';status.textContent='Victoire !';statusSub.textContent=`${name} a aligné trois formes. Bien joué !`;banner.textContent=`✦ ${name} REMPORTE LA PARTIE ✦`;banner.classList.add('show');}else{status.textContent='Match nul';statusSub.textContent='Le plateau est complet. Une revanche ?';banner.textContent='ÉGALITÉ — PERSONNE NE LÂCHE !';banner.classList.add('show');}setTurn();}
+function renderCell(i){
+ const cell=cells[i];cell.className='cell';cell.innerHTML='';cell.disabled=false;
+ if(board[i]){
+  cell.classList.add(`${board[i]}-mark`);
+  cell.innerHTML=`<span class="symbol" style="color:var(--${board[i]==='blue'?'blue':'pink'})">${symbols[board[i]]}</span>`;
+  cell.disabled=false;
+  cell.setAttribute('aria-label',`Case ${i+1}, ${board[i]==='blue'?'X':'O'}`);
+ }else cell.setAttribute('aria-label',`Case ${i+1}, libre`);
+ if(selectedPiece===i)cell.classList.add('selected-piece');
+}
+function countPieces(side){return board.filter(v=>v===side).length;}
+function play(index,botMove=false){
+ if(gameOver)return;
+ if(mode==='bot'&&current==='pink'&&!botMove)return;
+ if(mode==='online'&&!botMove&&current!==mySide)return;
+ if(mode==='online'&&!botMove&&(!connection||!connection.open)){statusSub.textContent='Connecte-toi à ton adversaire avant de jouer.';return;}
+ const side=current, placed=countPieces(side);
+ if(placed<3){
+  if(board[index])return;
+  board[index]=side;selectedPiece=null;renderCell(index);
+ }else{
+  if(selectedPiece===null){
+   if(botMove)return;
+   if(board[index]!==side)return;
+   selectedPiece=index;renderCell(index);
+   status.textContent='Choisis une case libre';
+   statusSub.textContent='Sélectionne une de tes pièces, puis touche une case vide pour la déplacer.';
+   return;
+  }
+  if(board[index]){
+   if(board[index]===side&&!botMove){const old=selectedPiece;selectedPiece=index;renderCell(old);renderCell(index);return;}
+   return;
+  }
+  if(!canMove(selectedPiece,index)){statusSub.textContent='Déplace ta pièce vers un point relié par une ligne.';return;}
+  board[index]=side;board[selectedPiece]=null;const old=selectedPiece;selectedPiece=null;renderCell(old);renderCell(index);
+ }
+ const line=wins.find(combo=>combo.every(i=>board[i]===side));
+ if(line){finish(side,line);if(mode==='online'&&!botMove&&connection)connection.send({type:'state',board,current,gameOver,scores});return;}
+ if(board.every(Boolean)&&countPieces('blue')+countPieces('pink')===9){finish(null,[]);return;}
+ current=current==='blue'?'pink':'blue';
+ status.textContent=current==='blue'?'Au tour de X':(mode==='bot'?'Au tour du bot (O)':'Au tour de O');
+ statusSub.textContent=countPieces(current)<3
+  ? `Place ${3-countPieces(current)} pièce(s) ${current==='blue'?'X':'O'} restante(s).`
+  : `Déplace une pièce ${current==='blue'?'X':'O'} vers une case libre.`;
+ setTurn();
+ if(mode==='bot')updateBotTurn();
+ if(mode==='online'&&!botMove&&connection)connection.send({type:'move',index,side,board,current});
+}
+function updateBotTurn(){if(mode!=='bot'||gameOver||current!=='pink')return;cells.forEach(c=>c.disabled=false);status.textContent='Le bot réfléchit…';botTimer=setTimeout(()=>{if(mode==='bot'&&!gameOver&&current==='pink'){if(countPieces('pink')<3){const i=chooseBotMove();if(i!==undefined)play(i,true);}else{const move=chooseBotMovement();if(move){selectedPiece=move.from;play(move.to,true);}}}},difficulty==='easy'?350:600);}
+function chooseBotMove(){const empty=board.map((v,i)=>v===null?i:-1).filter(i=>i>=0);if(!empty.length)return;const winning=side=>{for(const i of empty){board[i]=side;const ok=wins.some(w=>w.every(j=>board[j]===side));board[i]=null;if(ok)return i;}};if(difficulty==='easy'&&Math.random()<.55)return empty[Math.floor(Math.random()*empty.length)];let i=winning('pink');if(i!==undefined)return i;i=winning('blue');if(i!==undefined)return i;if(difficulty!=='hard'){if(board[4]===null)return 4;const corners=[0,2,6,8].filter(i=>board[i]===null);return corners.length?corners[Math.floor(Math.random()*corners.length)]:empty[Math.floor(Math.random()*empty.length)];}function minimax(side){if(wins.some(w=>w.every(i=>board[i]===side)))return side==='pink'?10:-10;if(board.every(Boolean))return 0;let best=side==='pink'?-Infinity:Infinity;for(const j of board.map((v,k)=>v===null?k:-1).filter(k=>k>=0)){board[j]=side;const score=minimax(side==='pink'?'blue':'pink');board[j]=null;best=side==='pink'?Math.max(best,score):Math.min(best,score);}return best;}let best=-Infinity,choice=empty[0];for(const j of empty){board[j]='pink';const score=minimax('blue');board[j]=null;if(score>best){best=score;choice=j;}}return choice;}
+function chooseBotMovement(){
+ const pieces=board.map((v,i)=>v==='pink'?i:-1).filter(i=>i>=0);
+ const moves=[];for(const from of pieces)for(const to of links[from])if(board[to]===null)moves.push({from,to});
+ if(!moves.length)return null;
+ for(const m of moves){board[m.from]=null;board[m.to]='pink';const win=wins.some(w=>w.every(i=>board[i]==='pink'));board[m.to]=null;board[m.from]='pink';if(win)return m;}
+ for(const m of moves){board[m.from]=null;board[m.to]='blue';const threat=wins.some(w=>w.every(i=>board[i]==='blue'));board[m.to]=null;board[m.from]='pink';if(threat)return m;}
+ return moves[Math.floor(Math.random()*moves.length)];
+}
+function disconnectOnline(){if(connection){try{connection.close();}catch{}connection=null;}if(peer){try{peer.destroy();}catch{}peer=null;}}
+function setMode(next){mode=next;document.getElementById('bot-options').hidden=next!=='bot';document.getElementById('online-options').hidden=next!=='online';['bot','local','online'].forEach(m=>document.getElementById('mode-'+m).classList.toggle('primary',m===next));document.getElementById('connection-pill').textContent=next==='bot'?'MODE BOT':next==='online'?'MODE EN LIGNE':'MODE LOCAL';if(next!=='online')disconnectOnline();players.blue.querySelector('strong').textContent=next==='bot'?'JOUEUR AZUR':next==='online'?(mySide==='blue'?'TOI · AZUR':'ADVERSAIRE · AZUR'):'JOUEUR AZUR';players.pink.querySelector('strong').textContent=next==='bot'?'BOT · ORCHIDÉE':next==='online'?(mySide==='pink'?'TOI · ORCHIDÉE':'ADVERSAIRE · ORCHIDÉE'):'JOUEUR ORCHIDÉE';newGame(false);}
+function connectRoom(conn,side){connection=conn;mySide=side;conn.on('open',()=>{document.getElementById('online-status').textContent='Connecté ! Tu joues '+(side==='blue'?'avec les ronds azur.':'avec les étoiles orchidée.');players.blue.querySelector('strong').textContent=side==='blue'?'TOI · AZUR':'ADVERSAIRE · AZUR';players.pink.querySelector('strong').textContent=side==='pink'?'TOI · ORCHIDÉE':'ADVERSAIRE · ORCHIDÉE';newGame(false);});conn.on('data',msg=>{if(msg.type==='move'&&Number.isInteger(msg.index)&&msg.side===current)play(msg.index,true);if(msg.type==='restart')newGame(false);});conn.on('close',()=>document.getElementById('online-status').textContent='Adversaire déconnecté.');}
+cells.forEach(cell=>cell.addEventListener('click',()=>play(Number(cell.dataset.index))));document.getElementById('restart').addEventListener('click',()=>newGame());
+document.getElementById('mode-bot').addEventListener('click',()=>setMode('bot'));document.getElementById('mode-local').addEventListener('click',()=>setMode('local'));document.getElementById('mode-online').addEventListener('click',()=>setMode('online'));document.getElementById('difficulty').addEventListener('change',e=>difficulty=e.target.value);
+document.getElementById('host-online').addEventListener('click',()=>{if(!window.Peer){document.getElementById('online-status').textContent='Service en ligne indisponible. Vérifie Internet.';return;}disconnectOnline();peer=new Peer();document.getElementById('online-status').textContent='Création de la salle…';peer.on('open',id=>{document.getElementById('online-status').textContent='Partage cet identifiant avec ton ami : '+id;mySide='blue';});peer.on('connection',conn=>connectRoom(conn,'blue'));peer.on('error',()=>document.getElementById('online-status').textContent='Erreur de création de salle. Réessaie.');});
+document.getElementById('join-online').addEventListener('click',()=>{const id=document.getElementById('peer-id').value.trim();if(!id){document.getElementById('online-status').textContent='Entre d’abord l’identifiant de ton ami.';return;}if(!window.Peer){document.getElementById('online-status').textContent='Service en ligne indisponible. Vérifie Internet.';return;}disconnectOnline();peer=new Peer();document.getElementById('online-status').textContent='Connexion à la salle…';peer.on('open',()=>connectRoom(peer.connect(id,{reliable:true}),'pink'));peer.on('error',()=>document.getElementById('online-status').textContent='Connexion impossible. Vérifie l’identifiant.');});
+document.getElementById('reset-scores').addEventListener('click',()=>{scores={blue:0,pink:0};updateScores();newGame();});updateScores();newGame();
+})();
+</script>
+</body>
+</html>
